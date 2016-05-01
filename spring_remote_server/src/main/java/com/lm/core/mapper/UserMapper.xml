@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lm.core.mapper.UserMapper">
+	<resultMap type="com.lm.core.entity.User" id="user">
+		<id property="id" column="id"/>
+		<result property="name" column="name"/>
+		<result property="password" column="password"/>
+	</resultMap>
+	
+	<select id="getUserByAcount" parameterType="String" resultMap="user">
+		select * from user where name=#{param1} and password=#{param2}  
+	</select>
+</mapper>

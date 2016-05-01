@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:jaxws="http://cxf.apache.org/jaxws" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+   		http://www.springframework.org/schema/aop
+   		http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+   		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://cxf.apache.org/jaxws     
+        http://cxf.apache.org/schemas/jaxws.xsd">
+
+	<description>application-context config</description>
+
+	<!-- 依赖注入,包扫描 -->
+	<context:component-scan base-package="com.lm.core">
+	</context:component-scan>
+
+	<!-- 依赖文件 -->
+	<context:property-placeholder location="classpath:config.properties" />
+	<!-- 数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+
+	<!-- 事务配置 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<!-- 启动事务注解 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<!-- 配置mybatis -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:mybatis.xml"></property>
+	</bean>
+
+	<!-- 包扫描mybatis配置文件 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.lm.core.mapper"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+	</bean>
+	<!-- spring rmi -->
+	<bean id="clientRmiTest" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl" value="rmi://127.0.0.1:1021/urseRmiServiceTest" />
+		<property name="serviceInterface" value="com.lm.core.service.UserRmiService" />
+		<property name="lookupStubOnStartup" value="false" />
+		<property name="refreshStubOnConnectFailure" value="true"></property>
+		<!-- <aop:config proxy-target-class="true"/ -->
+	</bean>
+
+	<bean id="httpInvokerProxy"
+		class="org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean">
+		<property name="serviceUrl"
+			value="http://127.0.0.1:8080/spring_remote_server/remoting/userExporter" />
+		<property name="serviceInterface" value="com.lm.core.service.UserHttpService" />
+	</bean>
+	
+	<bean id="myThreadPool" class="com.lm.core.util.MyThreadPool">
+		<property name="corePoolSize" value="5" />
+        <property name="maxPoolSize" value="10" />
+        <property name="queueCapacity" value="25" />
+	</bean>
+	
+	
+	<import resource="classpath:META-INF/cxf/cxf.xml"/>  
+   <!--  <import resource="classpath:META-INF/cxf/cxf-extension-soap.xml"/>  
+    <import resource="classpath:META-INF/cxf/cxf-servlet.xml"/>   -->
+    <jaxws:client id="userWsService" serviceClass="com.lm.core.service.UserWsService" 
+    	address="http://127.0.0.1:8080/spring_remote_server/webservice/userWebService"/>  
+    	
+    <!-- activemq -->
+	<import resource="classpath:application-context-activemq.xml"/>
+</beans>
